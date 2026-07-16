@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Loader } from '@googlemaps/js-api-loader';
-import { 
-  MapPin, Volume2, VolumeX, Download, Eye, Mic, MicOff, RefreshCw, 
-  CheckCircle, AlertTriangle, FileText, ChevronRight, Languages, Sparkles, Home, Sun, Moon
+import {
+  MapPin, Volume2, VolumeX, Download, Eye, Mic, MicOff, RefreshCw,
+  CheckCircle, AlertTriangle, FileText, ChevronRight, Languages, Sparkles, Home, Sun, Moon, Upload
 } from 'lucide-react';
 
 // FadeIn wrapper component
@@ -43,7 +43,8 @@ function AnimatedHeading({ text, delay = 200, charDelay = 30 }) {
   const lines = text.split('\n');
 
   return (
-    <h1 
+    <h1
+      aria-label={text}
       style={{
         fontSize: 'clamp(2.2rem, 5vw, 4.2rem)',
         fontWeight: 400,
@@ -55,6 +56,7 @@ function AnimatedHeading({ text, delay = 200, charDelay = 30 }) {
         overflowWrap: 'normal',
       }}
     >
+      <span aria-hidden="true">
       {lines.map((line, lineIndex) => {
         const lineLength = line.length;
         return (
@@ -79,6 +81,7 @@ function AnimatedHeading({ text, delay = 200, charDelay = 30 }) {
           </span>
         );
       })}
+      </span>
     </h1>
   );
 }
@@ -536,6 +539,16 @@ export default function App() {
       const h = canvas.height;
       const score = analysisResult.safetyScore;
 
+      // No reliable analysis for this photo: don't draw a barrier icon that implies a reading we don't have.
+      if (score == null || analysisResult.isFallback) {
+        ctx.fillStyle = 'rgba(148, 163, 184, 0.9)';
+        ctx.font = '13px Outfit';
+        ctx.textAlign = 'center';
+        ctx.fillText('분석 결과 없음', w / 2, h / 2);
+        ctx.textAlign = 'left';
+        return;
+      }
+
       const color = score >= 80 ? 'rgba(16, 185, 129, 0.85)' : score >= 50 ? 'rgba(245, 158, 11, 0.85)' : 'rgba(239, 68, 68, 0.85)';
       ctx.strokeStyle = color;
       ctx.lineWidth = 3;
@@ -579,8 +592,9 @@ export default function App() {
         ctx.stroke();
 
         ctx.fillStyle = 'white';
-        ctx.font = 'bold 11px Outfit';
-        ctx.fillText(`14.5° Slope`, w * 0.47, h * 0.7);
+        ctx.font = 'bold 13px Outfit';
+        const slopeAngle = analysisResult.ramp?.slopeAngle;
+        ctx.fillText(slopeAngle != null ? `${slopeAngle}° Slope` : 'Slope', w * 0.47, h * 0.7);
 
       } else {
         ctx.lineWidth = 4;
@@ -598,6 +612,14 @@ export default function App() {
         ctx.moveTo(w * 0.55, h * 0.35);
         ctx.lineTo(w * 0.45, h * 0.45);
         ctx.stroke();
+
+        const steps = analysisResult.stairs?.steps;
+        const stepHeight = analysisResult.stairs?.stepHeight;
+        if (steps != null && stepHeight != null) {
+          ctx.fillStyle = 'white';
+          ctx.font = 'bold 13px Outfit';
+          ctx.fillText(`${steps}단 / ${stepHeight}cm`, w * 0.5 - 30, h * 0.55);
+        }
       }
     }
   }, [analysisResult, showDashboard]);
@@ -657,14 +679,7 @@ export default function App() {
     URL.revokeObjectURL(url);
   };
 
-  // 11. 원클릭 행정 건의서 가상 전송 팝업
-  const [isSent, setIsSent] = useState(false);
-  const sendPetitionSim = () => {
-    setIsSent(true);
-    setTimeout(() => setIsSent(false), 3000);
-  };
-
-  // 12. 음성 검색
+  // 11. 음성 검색
   const startSTT = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -932,29 +947,34 @@ export default function App() {
             {/* Map Overlay Controls */}
             <div className="map-overlay-controls z-10">
               <div className="glass-panel control-panel flex items-center gap-3">
-                <button 
+                <button
                   onClick={() => setShowDashboard(false)}
                   className="bg-white/10 hover:bg-white/20 text-white p-2 rounded-lg transition-colors"
                   title="홈으로 돌아가기"
+                  aria-label="홈으로 돌아가기"
                 >
-                  <Home size={16} />
+                  <Home size={16} aria-hidden="true" />
                 </button>
                 <div>
                   <h1 className="flex items-center gap-1 text-sm font-bold text-white">
                     <Sparkles className="text-blue-400 fill-blue-400" size={14} /> ZeroStep
                   </h1>
-                  <p className="text-[10px] text-muted">무장애 안심 지도 & 3D HUD</p>
+                  <p className="text-[12px] text-muted">무장애 안심 지도 & 3D HUD</p>
                 </div>
               </div>
 
               {/* Voice Assist Search Panel */}
               <div className="glass-panel control-panel flex items-center gap-3">
-                <button className={`audio-btn ${isListening ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-600'} text-white p-2 rounded-lg`} onClick={startSTT}>
-                  {isListening ? <MicOff size={16} /> : <Mic size={16} />}
+                <button
+                  className={`audio-btn ${isListening ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-600'} text-white p-2 rounded-lg`}
+                  onClick={startSTT}
+                  aria-label={isListening ? '음성 검색 중지' : '음성으로 장소 검색'}
+                >
+                  {isListening ? <MicOff size={16} aria-hidden="true" /> : <Mic size={16} aria-hidden="true" />}
                 </button>
                 <div className="text-xs">
                   <p className="font-bold text-white">{isListening ? '말씀하세요...' : '음성 안내 도우미'}</p>
-                  <p className="text-muted text-[10px]">"이디야커피", "우체국" 또는 "도서관" 검색</p>
+                  <p className="text-muted text-[12px]">"이디야커피", "우체국" 또는 "도서관" 검색</p>
                 </div>
               </div>
             </div>
@@ -970,18 +990,21 @@ export default function App() {
               </h2>
               <div className="flex items-center gap-2">
                 {/* Theme Toggle Button */}
-                <button 
+                <button
                   onClick={() => setIsDarkMode(!isDarkMode)}
                   className={`p-1.5 rounded-lg border transition-all ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-amber-400' : 'bg-black/5 border-black/10 hover:bg-black/10 text-blue-500'}`}
                   title={isDarkMode ? "라이트 모드로 전환" : "다크 모드로 전환"}
+                  aria-label={isDarkMode ? "라이트 모드로 전환" : "다크 모드로 전환"}
                 >
                   {isDarkMode ? <Sun size={14} /> : <Moon size={14} />}
                 </button>
 
                 <div className={`flex gap-1.5 items-center text-xs border rounded-lg p-1 ${isDarkMode ? 'bg-white/5 border-white/10' : 'bg-black/5 border-black/10'}`}>
-                  <Languages size={14} className="text-gray-400" />
-                  <select 
-                    value={language} 
+                  <Languages size={14} className="text-gray-400" aria-hidden="true" />
+                  <label htmlFor="language-select" className="sr-only">안내 언어 선택</label>
+                  <select
+                    id="language-select"
+                    value={language}
                     onChange={(e) => setLanguage(e.target.value)}
                     className={`bg-transparent border-0 outline-none text-xs cursor-pointer ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
                   >
@@ -994,18 +1017,38 @@ export default function App() {
               </div>
             </div>
 
-
-
             {/* Custom Entrance Upload */}
+            <label
+              htmlFor="entrance-photo-upload"
+              className="flex items-center justify-center gap-2 text-xs font-semibold text-white bg-white/10 hover:bg-white/20 border border-white/10 rounded-lg px-3 py-2.5 cursor-pointer transition-colors"
+            >
+              <Upload size={14} aria-hidden="true" /> 내 사진으로 직접 분석하기
+            </label>
+            <input
+              id="entrance-photo-upload"
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="sr-only"
+            />
+
             {/* Ambiguous Location Warning Banner */}
             {selectedPlace && selectedPlace.isAmbiguous && (
               <div className="bg-amber-500/10 border border-amber-500/20 text-amber-400 p-3 rounded-lg text-xs flex flex-col gap-1.5 leading-relaxed">
-                <p className="font-bold flex items-center gap-1 text-[11px] text-amber-400">
+                <p className="font-bold flex items-center gap-1 text-[12px] text-amber-400">
                   <AlertTriangle size={13} className="text-amber-500" /> ⚠️ 선택한 위치가 다소 애매합니다.
                 </p>
-                <p className="text-gray-400 text-[10px]">
+                <p className="text-gray-400 text-[12px]">
                   정확한 분석을 위해 지도에서 건물 입구 전면이나 도로변을 정확히 다시 탭해 주시기 바랍니다.
                 </p>
+              </div>
+            )}
+
+            {/* Analysis Failure Banner: never let a failed AI/street-view call pass as a real reading */}
+            {analysisResult && (analysisResult.isFallback || analysisResult.safetyScore == null) && (
+              <div className="bg-amber-500/10 border border-amber-500/20 text-amber-400 p-3 rounded-lg text-xs flex items-start gap-2 leading-relaxed">
+                <AlertTriangle size={14} className="shrink-0 mt-0.5" aria-hidden="true" />
+                <span>{analysisResult.description || 'AI 분석에 실패했습니다. 다른 사진으로 다시 시도해 주세요.'}</span>
               </div>
             )}
 
@@ -1016,19 +1059,25 @@ export default function App() {
                   <h2 className="text-sm font-semibold text-white">{selectedPlace ? selectedPlace.name : '로딩 중...'}</h2>
                   <p className="text-xs text-muted mt-0.5">{selectedPlace ? selectedPlace.address : ''}</p>
                 </div>
-                
+
                 {/* Safety Score Badge */}
                 {analysisResult && (
-                  <div className={`score-badge flex items-center gap-1 text-[11px] px-2 py-1 rounded-full font-bold ${
-                    analysisResult.safetyScore >= 80 
-                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-                      : analysisResult.safetyScore >= 50 
-                        ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' 
-                        : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                  }`}>
-                    {analysisResult.safetyScore >= 80 ? <CheckCircle size={12} /> : <AlertTriangle size={12} />}
-                    안전: {analysisResult.safetyScore}점
-                  </div>
+                  analysisResult.safetyScore != null ? (
+                    <div className={`score-badge flex items-center gap-1 text-[12px] px-2 py-1 rounded-full font-bold ${
+                      analysisResult.safetyScore >= 80
+                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                        : analysisResult.safetyScore >= 50
+                          ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                          : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                    }`}>
+                      {analysisResult.safetyScore >= 80 ? <CheckCircle size={12} /> : <AlertTriangle size={12} />}
+                      안전: {analysisResult.safetyScore}점
+                    </div>
+                  ) : (
+                    <div className="score-badge flex items-center gap-1 text-[12px] px-2 py-1 rounded-full font-bold bg-gray-500/10 text-gray-400 border border-gray-500/20">
+                      <AlertTriangle size={12} /> 분석 실패
+                    </div>
+                  )
                 )}
               </div>
 
@@ -1062,11 +1111,12 @@ export default function App() {
             {analysisResult && (
               <div className="glass-panel p-4 flex flex-col gap-3">
                 <div className="flex items-center gap-3">
-                  <button 
+                  <button
                     className="p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-md transition-colors"
                     onClick={playAudio}
+                    aria-label={isPlayingAudio ? '음성 안내 정지' : '음성 안내 재생'}
                   >
-                    {isPlayingAudio ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                    {isPlayingAudio ? <VolumeX size={16} aria-hidden="true" /> : <Volume2 size={16} aria-hidden="true" />}
                   </button>
                   <div className="text-xs">
                     <p className="font-bold text-white">배리어프리 음성 가이드</p>
@@ -1079,30 +1129,27 @@ export default function App() {
             )}
 
             {/* Administrative Petition Panel */}
-            {analysisResult && analysisResult.safetyScore < 80 && (
+            {analysisResult && analysisResult.petitionText && typeof analysisResult.safetyScore === 'number' && analysisResult.safetyScore < 80 && (
               <div className="glass-panel p-4 flex flex-col gap-3">
                 <div className="flex justify-between items-center">
                   <h2 className="text-xs font-bold text-amber-400 flex items-center gap-1">
                     <AlertTriangle size={13} /> 법적 주출입구 단차 개선 건의서
                   </h2>
-                  <button 
-                    className="bg-white/10 hover:bg-white/20 text-white p-1 px-2.5 rounded text-xs flex items-center gap-1 transition-colors" 
+                  <button
+                    className="bg-white/10 hover:bg-white/20 text-white p-1 px-2.5 rounded text-xs flex items-center gap-1 transition-colors"
                     onClick={downloadPetition}
                   >
-                    <Download size={12} /> 다운로드
+                    <Download size={12} aria-hidden="true" /> 다운로드
                   </button>
                 </div>
-                
+
                 <div className="bg-black/40 border border-white/5 p-3 rounded-lg max-h-[140px] overflow-y-auto text-xs text-gray-400 font-mono whitespace-pre-line leading-relaxed">
                   {analysisResult.petitionText}
                 </div>
 
-                <button 
-                  className="w-full text-xs py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold shadow-md transition-colors" 
-                  onClick={sendPetitionSim}
-                >
-                  {isSent ? '관할 구청 접수 및 팩스 발송 완료!' : '관할 구청 개선 민원 즉각 접수하기'}
-                </button>
+                <p className="text-[12px] text-gray-500 leading-relaxed">
+                  다운로드한 건의서에 본인 확인 정보를 기재한 뒤, 관할 구청 도로과 또는 정부24 국민신문고를 통해 직접 제출해 주세요.
+                </p>
               </div>
             )}
 
@@ -1111,7 +1158,7 @@ export default function App() {
               <h2 className="text-xs font-bold flex items-center gap-1.5 text-blue-400">
                 <Eye size={14} /> 보행 약자 시각 장애 가상 시뮬레이터
               </h2>
-              <p className="text-[11px] text-gray-400">안질환/색약 환자의 시야 장벽을 맵 위에 직접 투사해 체험합니다.</p>
+              <p className="text-[12px] text-gray-400">안질환/색약 환자의 시야로 위 입구 사진이 어떻게 보이는지 체험합니다.</p>
               
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <button 

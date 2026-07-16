@@ -22,16 +22,10 @@ public class TtsTranslationService {
             );
             return translation.getTranslatedText();
         } catch (Exception e) {
-            System.err.println("Translation failed, using mock fallback for lang: " + targetLang + " - " + e.getMessage());
-            // Simple mock translation fallback
-            if ("en".equalsIgnoreCase(targetLang)) {
-                return "There are 3 steps of about 18cm height at the entrance, and wheelchair access is impossible due to lack of ramps or handrails. The door is a push-pull type with an effective width of 85cm.";
-            } else if ("ja".equalsIgnoreCase(targetLang)) {
-                return "入り口に約18cmの高さの階段が3段あり、スロープや手すりがないため車椅子の進入は不可能です。ドアは開き戸で、有効幅は85cmです。";
-            } else if ("zh".equalsIgnoreCase(targetLang)) {
-                return "入口处有3级约18厘米高的台阶，由于没有坡道或扶手，轮椅无法进入。门为推拉门，有效宽度为85厘米。";
-            }
-            return text; // Return original if unknown
+            System.err.println("Translation failed, using original text for lang: " + targetLang + " - " + e.getMessage());
+            // Translation API failed: return the original (untranslated) text rather than an
+            // unrelated canned sentence, so the guide stays factually accurate even if not localized.
+            return text;
         }
     }
 
@@ -63,10 +57,11 @@ public class TtsTranslationService {
                 return Base64.getEncoder().encodeToString(audioContent);
             }
         } catch (Exception e) {
-            System.err.println("TTS synthesis failed, using mock fallback: " + e.getMessage());
-            // Return empty base64 or a small silent MP3 mock string to avoid crash
-            // This is a valid base64 for a tiny silent MP3
-            return "SUQzBAAAAAAAI1RTU0UAAAAPAAADTGFtZTMuOTguNFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV";
+            System.err.println("TTS synthesis failed: " + e.getMessage());
+            // Return empty instead of a silent-audio blob: a silent MP3 would satisfy the frontend's
+            // "do we have audio" check yet play nothing, leaving the user with no feedback at all.
+            // An empty string correctly falls through to the browser's native speech synthesis fallback.
+            return "";
         }
     }
 

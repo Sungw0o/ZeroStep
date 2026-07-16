@@ -141,15 +141,14 @@ public class AccessibilityController {
 
         } catch (Exception e) {
             System.err.println("JSON Parsing failed: " + e.getMessage());
-            // Safe fallback response structure
-            result.put("accessibilityStatus", "INACCESSIBLE");
-            result.put("stairs", Map.of("stepHeight", 15.0, "steps", 2, "handrail", false));
-            result.put("ramp", Map.of("slopeAngle", 0.0, "hasRamp", false, "rampWidth", 0));
-            result.put("door", Map.of("doorType", "push_pull", "doorWidth", 80.0));
-            result.put("description", "진입로 분석 완료. 경사로 부재로 휠체어 통행이 제한됩니다.");
-            result.put("audioGuide", generateAudioGuide("진입로 분석 완료. 경사로 부재로 휠체어 통행이 제한됩니다."));
-            result.put("petitionText", generatePetitionText(name, address, 15.0, 2, 0.0, false));
-            result.put("safetyScore", 30);
+            // AI response could not be parsed: report the failure honestly instead of guessing at
+            // stair/ramp measurements, since a fabricated safety score is worse than no answer.
+            result.put("accessibilityStatus", "UNKNOWN");
+            result.put("isFallback", true);
+            result.put("description", "AI 분석 결과를 처리하지 못했습니다. 다른 사진으로 다시 시도해 주세요.");
+            result.put("audioGuide", generateAudioGuide("AI 분석 결과를 처리하지 못했습니다. 다른 사진으로 다시 시도해 주세요."));
+            result.put("petitionText", null);
+            result.put("safetyScore", null);
             places.add(result);
         }
 
@@ -185,17 +184,17 @@ public class AccessibilityController {
         result.put("longitude", longitude);
 
         if (images.isEmpty()) {
-            // Fallback if no images fetched (e.g. no internet, quota limit, invalid key)
-            System.err.println("No street view images fetched, using mock fallback");
-            result.put("imageUrl", "https://storage.googleapis.com/zerostep-uploads-mock/sample-entrance.jpg");
-            result.put("accessibilityStatus", "INACCESSIBLE");
-            result.put("stairs", Map.of("stepHeight", 15.0, "steps", 2, "handrail", false));
-            result.put("ramp", Map.of("slopeAngle", 0.0, "hasRamp", false, "rampWidth", 0));
-            result.put("door", Map.of("doorType", "push_pull", "doorWidth", 80.0));
-            result.put("description", "거리뷰 이미지 수집 실패. 진입로 분석을 위한 대체 이미지를 사용합니다. 휠체어 단독 진입이 불가능한 계단 단차가 존재합니다.");
-            result.put("audioGuide", generateAudioGuide("거리뷰 이미지 수집 실패. 진입로 분석을 위한 대체 이미지를 사용합니다. 휠체어 단독 진입이 불가능한 계단 단차가 존재합니다."));
-            result.put("petitionText", generatePetitionText(name, address, 15.0, 2, 0.0, false));
-            result.put("safetyScore", 35);
+            // No street view imagery available (no internet, quota limit, invalid key, or no
+            // coverage at this location): say so, rather than inventing stair/ramp measurements
+            // for a location the AI never actually saw.
+            System.err.println("No street view images fetched for this location");
+            result.put("imageUrl", null);
+            result.put("accessibilityStatus", "UNKNOWN");
+            result.put("isFallback", true);
+            result.put("description", "이 위치의 거리뷰 이미지를 가져올 수 없어 분석을 진행하지 못했습니다. 건물 입구 사진을 직접 업로드해 분석해 주세요.");
+            result.put("audioGuide", generateAudioGuide("이 위치의 거리뷰 이미지를 가져올 수 없어 분석을 진행하지 못했습니다."));
+            result.put("petitionText", null);
+            result.put("safetyScore", null);
             places.add(result);
             return ApiResponse.ok(result);
         }
@@ -243,15 +242,13 @@ public class AccessibilityController {
 
         } catch (Exception e) {
             System.err.println("JSON Parsing failed for street view: " + e.getMessage());
-            result.put("imageUrl", "https://storage.googleapis.com/zerostep-uploads-mock/sample-entrance.jpg");
-            result.put("accessibilityStatus", "INACCESSIBLE");
-            result.put("stairs", Map.of("stepHeight", 15.0, "steps", 2, "handrail", false));
-            result.put("ramp", Map.of("slopeAngle", 0.0, "hasRamp", false, "rampWidth", 0));
-            result.put("door", Map.of("doorType", "push_pull", "doorWidth", 80.0));
-            result.put("description", "진입로 분석 완료. 경사로 부재로 휠체어 통행이 제한됩니다.");
-            result.put("audioGuide", generateAudioGuide("진입로 분석 완료. 경사로 부재로 휠체어 통행이 제한됩니다."));
-            result.put("petitionText", generatePetitionText(name, address, 15.0, 2, 0.0, false));
-            result.put("safetyScore", 30);
+            result.put("imageUrl", null);
+            result.put("accessibilityStatus", "UNKNOWN");
+            result.put("isFallback", true);
+            result.put("description", "AI 분석 결과를 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.");
+            result.put("audioGuide", generateAudioGuide("AI 분석 결과를 처리하지 못했습니다. 잠시 후 다시 시도해 주세요."));
+            result.put("petitionText", null);
+            result.put("safetyScore", null);
             places.add(result);
         }
 
@@ -362,10 +359,13 @@ public class AccessibilityController {
     }
 
     private String generatePetitionText(String placeName, String address, double stepHeight, int steps, double slopeAngle, boolean hasRamp) {
+        String today = java.time.LocalDate.now()
+                .format(java.time.format.DateTimeFormatter.ofPattern("yyyy년 M월 d일"));
+
         StringBuilder sb = new StringBuilder();
         sb.append("[행정 건의서: 배리어프리 보행 환경 개선 요청]\n\n");
         sb.append("수신: 관할 구청장 (도로과 및 사회복지과 귀하)\n");
-        sb.append("발신: 교통약자 이동권 확보를 위한 시민 모임 (ZeroStep 자동 생성 건의서)\n\n");
+        sb.append("발신: (성명 기재) ______________ (ZeroStep AI 분석을 근거로 작성한 초안이며, 제출 전 작성자 본인 확인 및 서명이 필요합니다)\n\n");
         sb.append("제목: ").append(placeName).append(" 진입로 보행 장벽 개선 및 이동 편의시설 설치 요청 건\n\n");
         sb.append("1. 현황 및 개선 필요 장소\n");
         sb.append("- 시설명: ").append(placeName).append("\n");
@@ -374,12 +374,23 @@ public class AccessibilityController {
         sb.append("- '교통약자의 이동편의 증진법' 제15조 (이동편의시설의 설치 등): 교통약자가 일상생활에서 안전하고 편리하게 이동할 수 있도록 시설의 주출입구 등에 이동편의시설을 설치하여야 합니다.\n");
         sb.append("- 동법 시행령 및 시행규칙: 주출입구의 높이 차이는 2센티미터 이하이어야 하며, 단차가 있을 경우 유효 폭 1.2미터 이상의 경사로를 설치하여야 합니다.\n\n");
         sb.append("3. 현장 실태 분석 결과 (AI 판독 데이터)\n");
-        sb.append("- 주출입구 계단 및 경사로를 통해 보행 약자의 자립적 보행 편의성을 검사했습니다.\n");
+        if (steps > 0) {
+            sb.append("- 계단: 약 ").append((int) stepHeight).append("cm 높이의 단차가 ").append(steps).append("개 확인됨 (법정 기준 2cm 초과)\n");
+        } else {
+            sb.append("- 계단: 단차 없음\n");
+        }
+        if (hasRamp) {
+            sb.append("- 경사로: 설치되어 있으나 경사각 ").append(slopeAngle).append("도로, 법정 기준(8.3도) ")
+              .append(slopeAngle > 8.3 ? "초과" : "이내").append("\n");
+        } else {
+            sb.append("- 경사로: 미설치\n");
+        }
+        sb.append("- 본 데이터는 Vertex AI Gemini의 사진 판독 결과이며, 실측값과 오차가 있을 수 있습니다.\n");
         sb.append("\n4. 요청 사항\n");
         sb.append("- 주출입구의 문턱/계단 단차 해소 (2cm 이하로 단차 낮추기 작업 또는 법정 기준에 부합하는 경사로 설치)\n");
         sb.append("- 교통약자가 타인의 도움 없이 동등하게 진입할 수 있도록 신속한 행정 지도 및 도로 패치 조치를 건의드립니다.\n\n");
-        sb.append("작성일자: 2026년 7월 16일\n");
-        sb.append("ZeroStep 시민 건의 드림\n");
+        sb.append("작성일자: ").append(today).append("\n");
+        sb.append("ZeroStep 이용자 드림\n");
         return sb.toString();
     }
 

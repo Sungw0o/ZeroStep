@@ -83,7 +83,7 @@ public class GcpService {
             }
         } catch (Exception e) {
             System.err.println("Vertex AI Gemini Analysis failed, using fallback mock: " + e.getMessage());
-            // Fallback mock JSON response
+            // Fallback mock JSON response - clearly marked as non-AI so callers/UI never present it as a real reading
             return "{\n" +
                     "  \"stairs\": {\n" +
                     "    \"stepHeight\": 18,\n" +
@@ -100,7 +100,8 @@ public class GcpService {
                     "    \"doorWidth\": 85\n" +
                     "  },\n" +
                     "  \"accessibilityStatus\": \"INACCESSIBLE\",\n" +
-                    "  \"description\": \"진입구에 약 18cm 높이의 계단이 3개 존재하며, 경사로나 손잡이가 없어 휠체어 진입이 불가능한 상태입니다. 문은 여닫이형으로 유효 너비는 85cm입니다.\"\n" +
+                    "  \"isFallback\": true,\n" +
+                    "  \"description\": \"AI 분석에 실패하여 예시 데이터를 표시합니다. 실제 현장 상태와 다를 수 있습니다.\"\n" +
                     "}";
         }
     }
@@ -159,7 +160,7 @@ public class GcpService {
             }
         } catch (Exception e) {
             System.err.println("Vertex AI Gemini Street View Analysis failed, using fallback mock: " + e.getMessage());
-            // Fallback mock JSON response
+            // Fallback mock JSON response - clearly marked as non-AI so callers/UI never present it as a real reading
             return "{\n" +
                     "  \"selectedHeading\": 90,\n" +
                     "  \"stairs\": {\n" +
@@ -177,7 +178,8 @@ public class GcpService {
                     "    \"doorWidth\": 110\n" +
                     "  },\n" +
                     "  \"accessibilityStatus\": \"ACCESSIBLE\",\n" +
-                    "  \"description\": \"동쪽(90도) 방향 거리뷰 분석 결과, 건물 진입구에 단차가 없으며 경사로 각도가 5.5도로 매우 완만하여 교통약자가 단독으로 진입하기 적합합니다. 진입문은 자동문입니다.\"\n" +
+                    "  \"isFallback\": true,\n" +
+                    "  \"description\": \"AI 거리뷰 분석에 실패하여 예시 데이터를 표시합니다. 실제 현장 상태와 다를 수 있습니다.\"\n" +
                     "}";
         }
     }
