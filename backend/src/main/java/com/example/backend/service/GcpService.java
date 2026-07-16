@@ -29,9 +29,12 @@ public class GcpService {
             storage.create(blobInfo, file.getBytes());
             return String.format("https://storage.googleapis.com/%s/%s", bucketName, objectName);
         } catch (Exception e) {
-            System.err.println("GCS Upload failed, using fallback mock: " + e.getMessage());
-            // Fallback mock URL
-            return "https://storage.googleapis.com/zerostep-uploads-mock/sample-entrance.jpg";
+            System.err.println("GCS Upload failed, using Base64 Data URL fallback: " + e.getMessage());
+            try {
+                return "data:" + file.getContentType() + ";base64," + java.util.Base64.getEncoder().encodeToString(file.getBytes());
+            } catch (Exception ex) {
+                return "https://images.unsplash.com/photo-1573164713988-8665fc963095?auto=format&fit=crop&w=640&q=80";
+            }
         }
     }
 
@@ -190,8 +193,8 @@ public class GcpService {
             storage.create(blobInfo, bytes);
             return String.format("https://storage.googleapis.com/%s/%s", bucketName, objectName);
         } catch (Exception e) {
-            System.err.println("GCS Byte Upload failed, using fallback mock: " + e.getMessage());
-            return "https://storage.googleapis.com/zerostep-uploads-mock/sample-entrance.jpg";
+            System.err.println("GCS Byte Upload failed, using Base64 Data URL fallback: " + e.getMessage());
+            return "data:" + contentType + ";base64," + java.util.Base64.getEncoder().encodeToString(bytes);
         }
     }
 }

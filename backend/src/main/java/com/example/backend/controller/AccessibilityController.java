@@ -112,7 +112,7 @@ public class AccessibilityController {
 
         try {
             // Parse Gemini JSON
-            Map<String, Object> geminiMap = objectMapper.readValue(geminiJson, Map.class);
+            Map<String, Object> geminiMap = objectMapper.readValue(cleanGeminiJson(geminiJson), Map.class);
             result.putAll(geminiMap);
 
             // Calculate Safety Score
@@ -205,7 +205,7 @@ public class AccessibilityController {
         
         try {
             // Parse Gemini JSON
-            Map<String, Object> geminiMap = objectMapper.readValue(geminiJson, Map.class);
+            Map<String, Object> geminiMap = objectMapper.readValue(cleanGeminiJson(geminiJson), Map.class);
             result.putAll(geminiMap);
 
             // Calculate Safety Score
@@ -260,8 +260,10 @@ public class AccessibilityController {
 
     private byte[] fetchStreetViewImage(double latitude, double longitude, int heading, String apiKey) {
         try {
-            String url = String.format("https://maps.googleapis.com/maps/api/streetview?size=640x480&location=%f,%f&heading=%d&pitch=0&key=%s",
-                    latitude, longitude, heading, apiKey);
+            String url = "https://maps.googleapis.com/maps/api/streetview?size=640x480&location=" 
+                    + latitude + "," + longitude 
+                    + "&heading=" + heading 
+                    + "&pitch=0&key=" + apiKey;
             java.net.http.HttpClient client = java.net.http.HttpClient.newHttpClient();
             java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
                     .uri(java.net.URI.create(url))
@@ -379,5 +381,19 @@ public class AccessibilityController {
         sb.append("작성일자: 2026년 7월 16일\n");
         sb.append("ZeroStep 시민 건의 드림\n");
         return sb.toString();
+    }
+
+    private String cleanGeminiJson(String rawJson) {
+        if (rawJson == null) return "{}";
+        String clean = rawJson.trim();
+        if (clean.startsWith("```json")) {
+            clean = clean.substring(7);
+        } else if (clean.startsWith("```")) {
+            clean = clean.substring(3);
+        }
+        if (clean.endsWith("```")) {
+            clean = clean.substring(0, clean.length() - 3);
+        }
+        return clean.trim();
     }
 }
