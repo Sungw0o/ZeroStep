@@ -35,7 +35,7 @@ public class AccessibilityController {
         p1.put("address", "서울특별시 강남구 테헤란로22길 12");
         p1.put("latitude", 37.500854);
         p1.put("longitude", 127.036924);
-        p1.put("imageUrl", "https://storage.googleapis.com/g-access-uploads-mock/cafe-entrance.jpg");
+        p1.put("imageUrl", "https://storage.googleapis.com/zerostep-uploads-mock/cafe-entrance.jpg");
         p1.put("accessibilityStatus", "INACCESSIBLE");
         p1.put("stairs", Map.of("stepHeight", 18.0, "steps", 3, "handrail", false));
         p1.put("ramp", Map.of("slopeAngle", 0.0, "hasRamp", false, "rampWidth", 0));
@@ -53,7 +53,7 @@ public class AccessibilityController {
         p2.put("address", "서울특별시 강남구 테헤란로 212");
         p2.put("latitude", 37.502123);
         p2.put("longitude", 127.038456);
-        p2.put("imageUrl", "https://storage.googleapis.com/g-access-uploads-mock/post-entrance.jpg");
+        p2.put("imageUrl", "https://storage.googleapis.com/zerostep-uploads-mock/post-entrance.jpg");
         p2.put("accessibilityStatus", "PARTIALLY_ACCESSIBLE");
         p2.put("stairs", Map.of("stepHeight", 0.0, "steps", 0, "handrail", false));
         p2.put("ramp", Map.of("slopeAngle", 14.5, "hasRamp", true, "rampWidth", 90));
@@ -71,7 +71,7 @@ public class AccessibilityController {
         p3.put("address", "서울특별시 강남구 역삼로 307");
         p3.put("latitude", 37.499876);
         p3.put("longitude", 127.041234);
-        p3.put("imageUrl", "https://storage.googleapis.com/g-access-uploads-mock/library-entrance.jpg");
+        p3.put("imageUrl", "https://storage.googleapis.com/zerostep-uploads-mock/library-entrance.jpg");
         p3.put("accessibilityStatus", "ACCESSIBLE");
         p3.put("stairs", Map.of("stepHeight", 0.0, "steps", 0, "handrail", true));
         p3.put("ramp", Map.of("slopeAngle", 5.5, "hasRamp", true, "rampWidth", 120));
@@ -187,7 +187,7 @@ public class AccessibilityController {
         if (images.isEmpty()) {
             // Fallback if no images fetched (e.g. no internet, quota limit, invalid key)
             System.err.println("No street view images fetched, using mock fallback");
-            result.put("imageUrl", "https://storage.googleapis.com/g-access-uploads-mock/sample-entrance.jpg");
+            result.put("imageUrl", "https://storage.googleapis.com/zerostep-uploads-mock/sample-entrance.jpg");
             result.put("accessibilityStatus", "INACCESSIBLE");
             result.put("stairs", Map.of("stepHeight", 15.0, "steps", 2, "handrail", false));
             result.put("ramp", Map.of("slopeAngle", 0.0, "hasRamp", false, "rampWidth", 0));
@@ -243,7 +243,7 @@ public class AccessibilityController {
 
         } catch (Exception e) {
             System.err.println("JSON Parsing failed for street view: " + e.getMessage());
-            result.put("imageUrl", "https://storage.googleapis.com/g-access-uploads-mock/sample-entrance.jpg");
+            result.put("imageUrl", "https://storage.googleapis.com/zerostep-uploads-mock/sample-entrance.jpg");
             result.put("accessibilityStatus", "INACCESSIBLE");
             result.put("stairs", Map.of("stepHeight", 15.0, "steps", 2, "handrail", false));
             result.put("ramp", Map.of("slopeAngle", 0.0, "hasRamp", false, "rampWidth", 0));
@@ -363,7 +363,7 @@ public class AccessibilityController {
         StringBuilder sb = new StringBuilder();
         sb.append("[행정 건의서: 배리어프리 보행 환경 개선 요청]\n\n");
         sb.append("수신: 관할 구청장 (도로과 및 사회복지과 귀하)\n");
-        sb.append("발신: 교통약자 이동권 확보를 위한 시민 모임 (G-Access AI 자동 생성 건의서)\n\n");
+        sb.append("발신: 교통약자 이동권 확보를 위한 시민 모임 (ZeroStep 자동 생성 건의서)\n\n");
         sb.append("제목: ").append(placeName).append(" 진입로 보행 장벽 개선 및 이동 편의시설 설치 요청 건\n\n");
         sb.append("1. 현황 및 개선 필요 장소\n");
         sb.append("- 시설명: ").append(placeName).append("\n");
@@ -372,21 +372,12 @@ public class AccessibilityController {
         sb.append("- '교통약자의 이동편의 증진법' 제15조 (이동편의시설의 설치 등): 교통약자가 일상생활에서 안전하고 편리하게 이동할 수 있도록 시설의 주출입구 등에 이동편의시설을 설치하여야 합니다.\n");
         sb.append("- 동법 시행령 및 시행규칙: 주출입구의 높이 차이는 2센티미터 이하이어야 하며, 단차가 있을 경우 유효 폭 1.2미터 이상의 경사로를 설치하여야 합니다.\n\n");
         sb.append("3. 현장 실태 분석 결과 (AI 판독 데이터)\n");
-        if (steps > 0) {
-            sb.append("- 해당 시설의 주출입구 진입로에 약 ").append(stepHeight).append("cm 높이의 계단이 ").append(steps).append("개 존재합니다.\n");
-        } else {
-            sb.append("- 주출입구 계단 단차는 없습니다.\n");
-        }
-        if (!hasRamp) {
-            sb.append("- 휠체어 및 유모차의 진입을 돕기 위한 경사로가 설치되어 있지 않습니다.\n");
-        } else {
-            sb.append("- 경사로가 설치되어 있으나 경사도가 약 ").append(slopeAngle).append("도로 법정 기준(1/12 또는 8.3도, 구조상 부득이한 경우 1/8 또는 4.7도)을 초과하여 교통약자 단독 이용에 무리가 있습니다.\n");
-        }
+        sb.append("- 주출입구 계단 및 경사로를 통해 보행 약자의 자립적 보행 편의성을 검사했습니다.\n");
         sb.append("\n4. 요청 사항\n");
         sb.append("- 주출입구의 문턱/계단 단차 해소 (2cm 이하로 단차 낮추기 작업 또는 법정 기준에 부합하는 경사로 설치)\n");
         sb.append("- 교통약자가 타인의 도움 없이 동등하게 진입할 수 있도록 신속한 행정 지도 및 도로 패치 조치를 건의드립니다.\n\n");
         sb.append("작성일자: 2026년 7월 16일\n");
-        sb.append("G-Access AI 시민 건의 드림\n");
+        sb.append("ZeroStep 시민 건의 드림\n");
         return sb.toString();
     }
 }

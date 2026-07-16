@@ -21,7 +21,7 @@ public class GcpService {
     public String uploadImage(MultipartFile file) {
         try {
             Storage storage = StorageOptions.getDefaultInstance().getService();
-            String bucketName = System.getenv().getOrDefault("GCS_BUCKET_NAME", "g-access-uploads");
+            String bucketName = System.getenv().getOrDefault("GCS_BUCKET_NAME", "zerostep-uploads");
             String objectName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
             BlobInfo blobInfo = BlobInfo.newBuilder(bucketName, objectName)
                     .setContentType(file.getContentType())
@@ -31,13 +31,13 @@ public class GcpService {
         } catch (Exception e) {
             System.err.println("GCS Upload failed, using fallback mock: " + e.getMessage());
             // Fallback mock URL
-            return "https://storage.googleapis.com/g-access-uploads-mock/sample-entrance.jpg";
+            return "https://storage.googleapis.com/zerostep-uploads-mock/sample-entrance.jpg";
         }
     }
 
     public String analyzeEntranceImage(MultipartFile file) {
         try {
-            String projectId = System.getenv().getOrDefault("GCP_PROJECT_ID", "g-access-ai-project");
+            String projectId = System.getenv().getOrDefault("GCP_PROJECT_ID", "zerostep-project");
             String location = System.getenv().getOrDefault("GCP_LOCATION", "us-central1");
 
             try (VertexAI vertexAi = new VertexAI(projectId, location)) {
@@ -104,7 +104,7 @@ public class GcpService {
 
     public String analyzeStreetViewImages(java.util.List<byte[]> images, java.util.List<Integer> headings) {
         try {
-            String projectId = System.getenv().getOrDefault("GCP_PROJECT_ID", "g-access-ai-project");
+            String projectId = System.getenv().getOrDefault("GCP_PROJECT_ID", "zerostep-project");
             String location = System.getenv().getOrDefault("GCP_LOCATION", "us-central1");
 
             try (VertexAI vertexAi = new VertexAI(projectId, location)) {
@@ -182,7 +182,7 @@ public class GcpService {
     public String uploadImageBytes(byte[] bytes, String fileName, String contentType) {
         try {
             Storage storage = com.google.cloud.storage.StorageOptions.getDefaultInstance().getService();
-            String bucketName = System.getenv().getOrDefault("GCS_BUCKET_NAME", "g-access-uploads");
+            String bucketName = System.getenv().getOrDefault("GCS_BUCKET_NAME", "zerostep-uploads");
             String objectName = UUID.randomUUID().toString() + "_" + fileName;
             BlobInfo blobInfo = BlobInfo.newBuilder(bucketName, objectName)
                     .setContentType(contentType)
@@ -191,7 +191,7 @@ public class GcpService {
             return String.format("https://storage.googleapis.com/%s/%s", bucketName, objectName);
         } catch (Exception e) {
             System.err.println("GCS Byte Upload failed, using fallback mock: " + e.getMessage());
-            return "https://storage.googleapis.com/g-access-uploads-mock/sample-entrance.jpg";
+            return "https://storage.googleapis.com/zerostep-uploads-mock/sample-entrance.jpg";
         }
     }
 }
