@@ -997,16 +997,6 @@ export default function App() {
 
 
             {/* Custom Entrance Upload */}
-            <div className="glass-panel p-4 flex flex-col gap-2">
-              <p className="text-xs font-bold text-white">새 입구 사진 업로드 분석 (실시간 Vertex AI)</p>
-              <input 
-                type="file" 
-                accept="image/*" 
-                onChange={handleImageUpload}
-                className="text-xs text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-600/20 file:text-blue-400 file:cursor-pointer hover:file:bg-blue-600/30"
-              />
-            </div>
-
             {/* Ambiguous Location Warning Banner */}
             {selectedPlace && selectedPlace.isAmbiguous && (
               <div className="bg-amber-500/10 border border-amber-500/20 text-amber-400 p-3 rounded-lg text-xs flex flex-col gap-1.5 leading-relaxed">
