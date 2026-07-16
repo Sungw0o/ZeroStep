@@ -1,0 +1,28 @@
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+
+# Backend
+backend/.gradle/
+backend/build/
+
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+gcp-key.json
+*.pem
+*.key
+*.p12
+*.jks
+
+
+# IDE / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db

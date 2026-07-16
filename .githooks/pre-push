@@ -1,0 +1,26 @@
+#!/usr/bin/env sh
+set -eu
+
+root="$(git rev-parse --show-toplevel)"
+
+echo "🤖 Antigravity Pre-push 검사 시작..."
+
+if [ -f "$root/frontend/package.json" ]; then
+  [ -d "$root/frontend/node_modules" ] || {
+    echo "검증 실패: frontend에서 npm install을 먼저 실행하세요." >&2
+    exit 1
+  }
+  echo "📦 frontend 빌드 및 테스트 검증..."
+  (cd "$root/frontend" && npm run test && npm run build)
+fi
+
+if [ -f "$root/backend/build.gradle" ]; then
+  echo "☕ backend 빌드 및 테스트 검증..."
+  if [ -f "$root/backend/gradlew" ]; then
+    (cd "$root/backend" && ./gradlew compileJava test)
+  elif command -v gradle >/dev/null 2>&1; then
+    (cd "$root/backend" && gradle compileJava test)
+  fi
+fi
+
+echo "✅ Antigravity Pre-push 검사 완료! 푸시를 진행합니다."

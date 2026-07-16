@@ -1,0 +1,51 @@
+plugins {
+    id 'java'
+    id 'jacoco'
+    id 'org.springframework.boot' version '4.0.7'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+description = 'Vue and Spring Boot starter backend'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencyManagement {
+    imports {
+        mavenBom 'com.google.cloud:libraries-bom:26.49.0'
+    }
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'com.google.cloud:google-cloud-storage'
+    implementation 'com.google.cloud:google-cloud-vertexai'
+    implementation 'com.google.cloud:google-cloud-texttospeech'
+    implementation 'com.google.cloud:google-cloud-translate'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+    finalizedBy tasks.named('jacocoTestReport')
+}
+
+tasks.named('jacocoTestReport') {
+    dependsOn tasks.named('test')
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}

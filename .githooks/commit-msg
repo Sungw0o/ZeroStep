@@ -1,0 +1,19 @@
+#!/usr/bin/env sh
+set -eu
+
+message="$(sed -n '1p' "$1")"
+
+# Antigravity Gitmoji allowed list (Unified 1-to-1 mapping)
+case "$message" in
+  "✨ feat: "*|"🐛 fix: "*|"♻️ refactor: "*|"✅ test: "*|"📝 docs: "*|"🚀 infra: "*|"🔧 chore: "*|"⚡ perf: "*|"⚡️ perf: "*|"🔒 security: "*|"💄 style: "*|"♿ accessibility: "*|"♿️ accessibility: "*|"🎨 design: "*) ;;
+  *)
+    echo "Antigravity 커밋 규칙 위반: <gitmoji> <type>: <요약> 형식이어야 합니다." >&2
+    echo "허용된 형식 예시:" >&2
+    echo "  ✨ feat: 기능 추가" >&2
+    echo "  🐛 fix: 오류 수정" >&2
+    echo "  🔧 chore: 빌드 및 의존성 설정" >&2
+    echo "  ♿ accessibility: 접근성 개선" >&2
+    echo "  🎨 design: UI 디자인 변경" >&2
+    exit 1
+    ;;
+esac
