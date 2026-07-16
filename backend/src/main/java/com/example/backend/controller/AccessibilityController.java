@@ -161,9 +161,10 @@ public class AccessibilityController {
             @RequestParam("name") String name,
             @RequestParam("address") String address,
             @RequestParam("latitude") double latitude,
-            @RequestParam("longitude") double longitude) {
+            @RequestParam("longitude") double longitude,
+            @RequestParam(value = "apiKey", required = false) String requestApiKey) {
 
-        String apiKey = getMapsApiKey();
+        String apiKey = (requestApiKey != null && !requestApiKey.isEmpty()) ? requestApiKey : getMapsApiKey();
         List<byte[]> images = new ArrayList<>();
         List<Integer> headings = Arrays.asList(0, 90, 180, 270);
 

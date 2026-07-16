@@ -366,6 +366,7 @@ export default function App() {
     formData.append("address", customPlace.address);
     formData.append("latitude", customPlace.latitude);
     formData.append("longitude", customPlace.longitude);
+    formData.append("apiKey", import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "");
 
     try {
       const res = await fetch('/api/v1/accessibility/streetview-analyze', {
@@ -851,31 +852,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* Scenario Preset Selection */}
-            <div className="flex flex-col gap-2">
-              <p className="text-xs text-gray-400 font-bold">배리어프리 시나리오 프리셋 선택</p>
-              <div className="grid grid-cols-3 gap-2">
-                {Object.keys(presetFiles).map(key => (
-                  <button
-                    key={key}
-                    className={`preset-btn flex items-center justify-center gap-1 py-2 px-1 text-xs border rounded-lg transition-all ${
-                      activePreset === key 
-                        ? 'border-blue-500 bg-blue-500/20 text-blue-400 font-bold' 
-                        : 'border-white/10 bg-white/5 text-gray-400 hover:bg-white/10'
-                    }`}
-                    onClick={() => {
-                      setActivePreset(key);
-                      const prefix = key === 'preset_starbucks' ? '이디야' : key === 'preset_subway' ? '우체국' : '도서관';
-                      const p = places.find(place => place.name.includes(prefix));
-                      if (p) setSelectedPlace(p);
-                    }}
-                  >
-                    <MapPin size={13} />
-                    <span className="truncate">{presetFiles[key].name.split(" ")[0]}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
+
 
             {/* Custom Entrance Upload */}
             <div className="glass-panel p-4 flex flex-col gap-2">
@@ -913,9 +890,9 @@ export default function App() {
 
               {/* 3D HUD Canvas Image Container */}
               <div className="hud-container relative w-full h-[220px] rounded-lg overflow-hidden bg-black/40 border border-white/5">
-                {activePreset && (
+                {analysisResult && analysisResult.imageUrl && (
                   <img 
-                    src={presetFiles[activePreset].url} 
+                    src={analysisResult.imageUrl} 
                     alt="Entrance preview" 
                     className="w-full h-full object-cover"
                   />
