@@ -348,7 +348,7 @@ export default function App() {
         });
       }
 
-      // Map Click Handler for Custom Pin placement
+      // Map Click Handler with Geocoding and Ambiguity Check
       mapInstance.addListener('click', (e) => {
         const lat = e.latLng.lat();
         const lng = e.latLng.lng();
@@ -371,18 +371,57 @@ export default function App() {
           }
         });
 
-        const customPlace = {
-          id: 'custom-click-' + Date.now(),
-          name: '지도 위 선택한 지점',
-          address: `위도: ${lat.toFixed(5)}, 경도: ${lng.toFixed(5)}`,
-          latitude: lat,
-          longitude: lng,
-          isCustom: true
-        };
+        // Reverse Geocoding to identify building and check ambiguity
+        const geocoder = new google.maps.Geocoder();
+        geocoder.geocode({ location: e.latLng }, (results, status) => {
+          let addressName = `위도: ${lat.toFixed(5)}, 경도: ${lng.toFixed(5)}`;
+          let placeName = '지도 위 선택한 지점';
+          let isAmbiguous = true;
 
-        setSelectedPlace(customPlace);
-        setActivePreset(null);
-        triggerStreetViewAnalysis(customPlace);
+          if (status === 'OK' && results && results.length > 0) {
+            const firstResult = results[0];
+            addressName = firstResult.formatted_address;
+
+            // Check if there is specific building number, premise, or building name
+            const hasBuildingNumber = firstResult.address_components.some(c => 
+              c.types.includes('premise') || 
+              c.types.includes('street_number') || 
+              c.types.includes('building_name') || 
+              c.types.includes('subpremise')
+            );
+            
+            if (hasBuildingNumber) {
+              isAmbiguous = false;
+              const buildingComponent = firstResult.address_components.find(c => 
+                c.types.includes('building_name') || 
+                c.types.includes('premise')
+              );
+              if (buildingComponent) {
+                placeName = buildingComponent.long_name;
+              } else {
+                const subLoc = firstResult.address_components.find(c => 
+                  c.types.includes('sublocality_level_4') || 
+                  c.types.includes('sublocality_level_3')
+                );
+                placeName = subLoc ? subLoc.long_name : '선택한 건물';
+              }
+            }
+          }
+
+          const customPlace = {
+            id: 'custom-click-' + Date.now(),
+            name: placeName,
+            address: addressName,
+            latitude: lat,
+            longitude: lng,
+            isCustom: true,
+            isAmbiguous: isAmbiguous
+          };
+
+          setSelectedPlace(customPlace);
+          setActivePreset(null);
+          triggerStreetViewAnalysis(customPlace);
+        });
       });
 
       setMap(mapInstance);
@@ -967,6 +1006,18 @@ export default function App() {
                 className="text-xs text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-600/20 file:text-blue-400 file:cursor-pointer hover:file:bg-blue-600/30"
               />
             </div>
+
+            {/* Ambiguous Location Warning Banner */}
+            {selectedPlace && selectedPlace.isAmbiguous && (
+              <div className="bg-amber-500/10 border border-amber-500/20 text-amber-400 p-3 rounded-lg text-xs flex flex-col gap-1.5 leading-relaxed">
+                <p className="font-bold flex items-center gap-1 text-[11px] text-amber-400">
+                  <AlertTriangle size={13} className="text-amber-500" /> ⚠️ 선택한 위치가 다소 애매합니다.
+                </p>
+                <p className="text-gray-400 text-[10px]">
+                  정확한 분석을 위해 지도에서 건물 입구 전면이나 도로변을 정확히 다시 탭해 주시기 바랍니다.
+                </p>
+              </div>
+            )}
 
             {/* 3D HUD Render Card */}
             <div className="glass-panel p-4 flex flex-col gap-3">
