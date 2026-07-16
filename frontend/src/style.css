@@ -427,3 +427,76 @@ body {
   filter: invert(1) brightness(0.8) !important;
 }
 
+/* Light Mode Theme Overrides */
+.app-container.light-mode {
+  background-color: #f3f4f6 !important;
+  color: #1f2937 !important;
+}
+
+.light-mode .glass-panel {
+  background: rgba(255, 255, 255, 0.75) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
+  color: #1f2937 !important;
+}
+
+.light-mode .sidebar-section {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-left: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: -4px 0 30px rgba(0, 0, 0, 0.05) !important;
+  color: #1f2937 !important;
+}
+
+.light-mode .text-white,
+.light-mode h1,
+.light-mode h2,
+.light-mode h3,
+.light-mode p,
+.light-mode span,
+.light-mode div:not(.score-badge) {
+  color: #1f2937 !important;
+}
+
+.light-mode .text-muted,
+.light-mode .text-gray-400 {
+  color: #4b5563 !important;
+}
+
+.light-mode input[type="text"],
+.light-mode .pac-input-styled {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+  color: #1f2937 !important;
+}
+
+.light-mode input[type="text"]::placeholder {
+  color: #9ca3af !important;
+}
+
+.light-mode select {
+  color: #1f2937 !important;
+}
+
+.light-mode .pac-container {
+  background-color: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+.light-mode .pac-item {
+  border-top-color: rgba(0, 0, 0, 0.05) !important;
+  color: #4b5563 !important;
+}
+
+.light-mode .pac-item:hover {
+  background-color: rgba(0, 0, 0, 0.03) !important;
+}
+
+.light-mode .pac-item-query {
+  color: #1f2937 !important;
+}
+
+.light-mode .pac-icon {
+  filter: none !important;
+}
+
+

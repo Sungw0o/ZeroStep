@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Loader } from '@googlemaps/js-api-loader';
 import { 
   MapPin, Volume2, VolumeX, Download, Eye, Mic, MicOff, RefreshCw, 
-  CheckCircle, AlertTriangle, FileText, ChevronRight, Languages, Sparkles, Home
+  CheckCircle, AlertTriangle, FileText, ChevronRight, Languages, Sparkles, Home, Sun, Moon
 } from 'lucide-react';
 
 // FadeIn wrapper component
@@ -107,6 +107,16 @@ export default function App() {
   
   // Canvas HUD Ref
   const canvasRef = useRef(null);
+
+  // Responsive Dark Mode State & Listener
+  const [isDarkMode, setIsDarkMode] = useState(true);
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    setIsDarkMode(mediaQuery.matches);
+    const listener = (e) => setIsDarkMode(e.matches);
+    mediaQuery.addEventListener('change', listener);
+    return () => mediaQuery.removeEventListener('change', listener);
+  }, []);
 
   // 3대 데모 프리셋 데이터 구조화
   const presetFiles = {
@@ -577,7 +587,7 @@ export default function App() {
   };
 
   return (
-    <div className={`w-full min-h-screen text-white bg-black font-sans antialiased selection:bg-white selection:text-black overflow-x-hidden ${visionFilter ? `sim-${visionFilter}` : ''}`}>
+    <div className={`w-full min-h-screen font-sans antialiased selection:bg-blue-600 selection:text-white overflow-x-hidden transition-colors duration-300 ${isDarkMode ? 'bg-[#0b0f19] text-white' : 'bg-gray-50 text-gray-900'}`}>
       
       {!showDashboard ? (
         // ------------------ ZeroStep Landing Page ------------------
@@ -775,8 +785,8 @@ export default function App() {
 
         </div>
       ) : (
-        // ------------------ ZeroStep Dashboard (G-Access AI Map) ------------------
-        <div className="app-container">
+        // ------------------ ZeroStep Dashboard ------------------
+        <div className={`app-container ${isDarkMode ? 'dark-mode' : 'light-mode'}`}>
           
           {/* Map Area */}
           <section className="map-section" ref={mapRef}>
@@ -837,18 +847,29 @@ export default function App() {
               <h2 className="flex items-center gap-1.5 text-base font-semibold text-white">
                 <FileText size={18} className="text-blue-400" /> 장소 상세 분석
               </h2>
-              <div className="flex gap-1.5 items-center text-xs bg-white/5 border border-white/10 rounded-lg p-1">
-                <Languages size={14} className="text-gray-400" />
-                <select 
-                  value={language} 
-                  onChange={(e) => setLanguage(e.target.value)}
-                  className="bg-transparent text-white border-0 outline-none text-xs cursor-pointer"
+              <div className="flex items-center gap-2">
+                {/* Theme Toggle Button */}
+                <button 
+                  onClick={() => setIsDarkMode(!isDarkMode)}
+                  className={`p-1.5 rounded-lg border transition-all ${isDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-amber-400' : 'bg-black/5 border-black/10 hover:bg-black/10 text-blue-500'}`}
+                  title={isDarkMode ? "라이트 모드로 전환" : "다크 모드로 전환"}
                 >
-                  <option value="ko" className="bg-[#111827]">한국어</option>
-                  <option value="en" className="bg-[#111827]">English</option>
-                  <option value="ja" className="bg-[#111827]">日本語</option>
-                  <option value="zh" className="bg-[#111827]">中文</option>
-                </select>
+                  {isDarkMode ? <Sun size={14} /> : <Moon size={14} />}
+                </button>
+
+                <div className={`flex gap-1.5 items-center text-xs border rounded-lg p-1 ${isDarkMode ? 'bg-white/5 border-white/10' : 'bg-black/5 border-black/10'}`}>
+                  <Languages size={14} className="text-gray-400" />
+                  <select 
+                    value={language} 
+                    onChange={(e) => setLanguage(e.target.value)}
+                    className={`bg-transparent border-0 outline-none text-xs cursor-pointer ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
+                  >
+                    <option value="ko" className={isDarkMode ? "bg-[#111827] text-white" : "bg-white text-gray-900"}>한국어</option>
+                    <option value="en" className={isDarkMode ? "bg-[#111827] text-white" : "bg-white text-gray-900"}>English</option>
+                    <option value="ja" className={isDarkMode ? "bg-[#111827] text-white" : "bg-white text-gray-900"}>日本語</option>
+                    <option value="zh" className={isDarkMode ? "bg-[#111827] text-white" : "bg-white text-gray-900"}>中文</option>
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -889,7 +910,7 @@ export default function App() {
               </div>
 
               {/* 3D HUD Canvas Image Container */}
-              <div className="hud-container relative w-full h-[220px] rounded-lg overflow-hidden bg-black/40 border border-white/5">
+              <div className={`hud-container relative w-full h-[220px] rounded-lg overflow-hidden border ${isDarkMode ? 'bg-black/40 border-white/5' : 'bg-gray-100 border-gray-200'} ${visionFilter ? `sim-${visionFilter}` : ''}`}>
                 {analysisResult && analysisResult.imageUrl && (
                   <img 
                     src={analysisResult.imageUrl} 
